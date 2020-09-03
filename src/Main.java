@@ -2,10 +2,12 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.SortedSet;
 
 import javax.imageio.ImageIO;
 
@@ -35,8 +37,15 @@ public class Main {
 			}
 		}
 		Iterator<Integer> it = colors.keySet().iterator();
+		ArrayList<Integer> sorted = new ArrayList<Integer>();
 		while(it.hasNext()) {
 			Integer rgb = it.next();
+			int i;
+			for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
+			sorted.add(i,rgb);
+		}
+		for(int i=sorted.size()-1; i>=0; i--) {
+			int rgb = sorted.get(i);
 			int red = (rgb >> 16) & 0xFF;
 			int green = (rgb >> 8) & 0xFF;
 			int blue = rgb & 0xFF;
