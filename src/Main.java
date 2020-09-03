@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,6 @@ public class Main {
 		System.out.print("Filepath: "+homepath);
 		String filepath = homepath+sc.nextLine();
 		System.out.println();
-		sc.close();
 		BufferedImage img = null;
 		try {
 			img = ImageIO.read(new File(filepath));
@@ -38,21 +38,65 @@ public class Main {
 		}
 		Iterator<Integer> it = colors.keySet().iterator();
 		ArrayList<Integer> sorted = new ArrayList<Integer>();
+		int totalPixels = 0;
 		while(it.hasNext()) {
 			Integer rgb = it.next();
 			int i;
 			for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
 			sorted.add(i,rgb);
+			totalPixels+=colors.get(rgb);
 		}
 		for(int i=sorted.size()-1; i>=0; i--) {
 			int rgb = sorted.get(i);
-			int red = (rgb >> 16) & 0xFF;
-			int green = (rgb >> 8) & 0xFF;
-			int blue = rgb & 0xFF;
-			System.out.println("("+red+","+green+","+blue+") : "+colors.get(rgb));
+			Color c = convertColor(rgb);
+			System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
 			//Color c = new Color(red,green,blue);
+		}
+		int width = 300;
+		int height = 100;
+		
+		BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+		Graphics g = output.createGraphics();
+		
+		double unit = (double)totalPixels/width;
+		System.out.println(unit);
+		int pos = 0;
+		for(int i=0; i<sorted.size(); i++) {
+			int rgb = sorted.get(i);
+			for(int j=0; j<(int)(.5+colors.get(rgb)/unit); j++) {
+				g.setColor(convertColor(rgb));
+				System.out.println(j+"  "+pos);
+				g.drawLine(pos,0,pos,height);
+				pos++;
+			}
+		}
+		
+		System.out.print("Filepath: "+homepath);
+		String filepath_save = homepath+sc.nextLine();
+		System.out.println();
+		sc.close();
+		
+		File ret = new File(filepath_save);
+		ret.getParentFile().mkdirs();
+		if(!ret.exists()) {
+			try {
+				ret.createNewFile();
+				ImageIO.write(output, "png", ret);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}
 
+
+	private static Color convertColor(int rgb) {
+		int red = (rgb >> 16) & 0xFF;
+		int green = (rgb >> 8) & 0xFF;
+		int blue = rgb & 0xFF;
+		Color c = new Color(red,green,blue);
+		return c;
+	
+	}
 }
