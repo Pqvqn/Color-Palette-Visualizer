@@ -65,6 +65,10 @@ public class Main {
 					clumps.put(rgb2,colors.get(rgb)+clumps.get(rgb2));
 					clumps.remove(rgb);
 					sorted.remove(i);
+					sorted.remove(j);
+					int k;
+					for(k=0; k<sorted.size() && clumps.get(sorted.get(k)) > clumps.get(rgb2); k++);
+					sorted.add(k,rgb2);
 					i--;
 					j=i;
 				}
