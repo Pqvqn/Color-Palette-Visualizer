@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.SortedSet;
 
 import javax.imageio.ImageIO;
 
@@ -46,17 +45,29 @@ public class Main {
 			sorted.add(i,rgb);
 			totalPixels+=colors.get(rgb);
 		}
-		for(int i=sorted.size()-1; i>=0; i--) {
+		/*for(int i=sorted.size()-1; i>=0; i--) {
 			int rgb = sorted.get(i);
 			Color c = convertColor(rgb);
 			System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
 			//Color c = new Color(red,green,blue);
+		}*/
+		double cutoff = 30;
+		
+		for(int i=1; i<sorted.size(); i++) {
+			int rgb = sorted.get(i);
+			for(int j=0; j<i; j++) {
+				if(colorsClose(rgb,sorted.get(j),30)){
+					
+				}
+			}
 		}
+		
 		int width = 300;
 		int height = 100;
 		
 		BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 		Graphics g = output.createGraphics();
+		
 		
 		double unit = (double)totalPixels/width;
 		System.out.println(unit);
@@ -64,21 +75,20 @@ public class Main {
 		for(int i=0; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
 			for(int j=0; j<(int)(.5+colors.get(rgb)/unit); j++) {
-				g.setColor(convertColor(rgb));
+				g.setColor(convertColorI2C(rgb));
 				System.out.println(j+"  "+pos);
 				g.drawLine(pos,0,pos,height);
 				pos++;
 			}
 		}
-		
-		for(int i=0; i<6; i++) {
+		/*for(int i=0; i<6; i++) {
 			Color col1 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
 			Color col2 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
 			
 			System.out.print("("+col1.getRed()+","+col1.getGreen()+","+col1.getBlue()+")" );
 			System.out.print("("+col2.getRed()+","+col2.getGreen()+","+col2.getBlue()+")" );
 			System.out.println(colorsDistance(col1,col2));
-		}
+		}*/
 		
 		
 		System.out.print("Filepath: "+homepath);
@@ -101,13 +111,49 @@ public class Main {
 	}
 
 
-	public static Color convertColor(int rgb) {
+	public static Color convertColorI2C(int rgb) {
 		int red = (rgb >> 16) & 0xFF;
 		int green = (rgb >> 8) & 0xFF;
 		int blue = rgb & 0xFF;
 		Color c = new Color(red,green,blue);
 		return c;
 	
+	}
+	public static int convertColorC2I(Color c) {
+		int red = (c.getRed() << 16) & 0x00FF0000;
+		int green = (c.getGreen() << 8) & 0x0000FF00;
+		int blue = c.getBlue() & 0x000000FF;
+		return 0xFF000000 | red | green | blue;
+	}
+	
+	public static int convertColor32I(int r, int g, int b) {
+		int red = (r << 16) & 0x00FF0000;
+		int green = (g << 8) & 0x0000FF00;
+		int blue = b & 0x000000FF;
+		return 0xFF000000 | red | green | blue;
+	}
+	
+	public static int[] convertColorI23(int rgb) {
+		int red = (rgb >> 16) & 0xFF;
+		int green = (rgb >> 8) & 0xFF;
+		int blue = rgb & 0xFF;
+		return new int[] {red,green,blue};
+	}
+	
+	public static Color averageColor(Color c1, Color c2) {
+		double red = Math.sqrt(Math.pow(c1.getRed(),2)+Math.pow(c2.getRed(),2))/2;
+		double green = Math.sqrt(Math.pow(c1.getGreen(),2)+Math.pow(c2.getGreen(),2))/2;
+		double blue = Math.sqrt(Math.pow(c1.getBlue(),2)+Math.pow(c2.getBlue(),2))/2;
+		return new Color((int)(.5+red),(int)(.5+green),(int)(.5+blue));
+	}
+	
+	public static int averageColor(int rgb1, int rgb2) {
+		int[] cols1 = convertColorI23(rgb1);
+		int[] cols2 = convertColorI23(rgb2);
+		double red = Math.sqrt(Math.pow(cols1[0],2)+Math.pow(cols2[0],2))/2;
+		double green = Math.sqrt(Math.pow(cols1[1],2)+Math.pow(cols2[1],2))/2;
+		double blue = Math.sqrt(Math.pow(cols1[2],2)+Math.pow(cols2[2],2))/2;
+		return convertColor32I((int)(.5+red),(int)(.5+green),(int)(.5+blue));
 	}
 	
 	public static boolean colorsClose(Color c1, Color c2, double cut) {
