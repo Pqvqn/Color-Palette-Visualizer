@@ -93,6 +93,12 @@ public class Main {
 				g.drawLine(pos,0,pos,height);
 				pos++;
 			}
+			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<=width) {
+				g.setColor(convertColorI2C(rgb));
+				System.out.println(1+"  "+pos);
+				g.drawLine(pos,0,pos,height);
+				pos++;
+			}
 		}
 		/*for(int i=0; i<6; i++) {
 			Color col1 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
