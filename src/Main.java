@@ -52,12 +52,21 @@ public class Main {
 			//Color c = new Color(red,green,blue);
 		}*/
 		double cutoff = 30;
+		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
+		for(int i=0; i<sorted.size(); i++) {
+			clumps.put(sorted.get(i),colors.get(sorted.get(i)));
+		}
 		
 		for(int i=1; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
 			for(int j=0; j<i; j++) {
-				if(colorsClose(rgb,sorted.get(j),30)){
-					
+				if(colorsClose(rgb,sorted.get(j),cutoff)){
+					int rgb2 = sorted.get(j);
+					clumps.put(rgb2,colors.get(rgb)+clumps.get(rgb2));
+					clumps.remove(rgb);
+					sorted.remove(i);
+					i--;
+					j=i;
 				}
 			}
 		}
@@ -74,7 +83,7 @@ public class Main {
 		int pos = 0;
 		for(int i=0; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
-			for(int j=0; j<(int)(.5+colors.get(rgb)/unit); j++) {
+			for(int j=0; j<(int)(.5+clumps.get(rgb)/unit); j++) {
 				g.setColor(convertColorI2C(rgb));
 				System.out.println(j+"  "+pos);
 				g.drawLine(pos,0,pos,height);
