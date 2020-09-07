@@ -28,23 +28,56 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		for(int i=0; i<img.getWidth(null); i++) {
-			for(int j=0; j<img.getHeight(null); j++) {
-				int rgb = img.getRGB(i,j);
-				if(!colors.containsKey(rgb))colors.put(rgb,0);
-				colors.put(rgb,colors.get(rgb)+1);
-			}
+		
+		int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
+		
+		System.out.println("S0");
+		
+		for(int i=0; i<pixels.length; i++) {
+			int rgb = pixels[i];
+			if(!colors.containsKey(rgb))colors.put(rgb,0);
+			colors.put(rgb,colors.get(rgb)+1);
 		}
+		
+		System.out.println("S1");
+		
 		Iterator<Integer> it = colors.keySet().iterator();
 		ArrayList<Integer> sorted = new ArrayList<Integer>();
 		int totalPixels = 0;
 		while(it.hasNext()) {
 			Integer rgb = it.next();
-			int i;
-			for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
-			sorted.add(i,rgb);
+			//int i;
+			//for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
+			//sorted.add(i,rgb);
 			totalPixels+=colors.get(rgb);
+			
+			if(sorted.isEmpty()) {
+				sorted.add(rgb);
+			}else {
+				int left = 0;
+				int right = sorted.size();
+				int prevalence = colors.get(rgb);
+				while(right-left>1) {
+					int divider = (right-left)/2+left;
+					if(colors.get(sorted.get(divider))>prevalence) {
+						left = divider;
+					}else if (colors.get(sorted.get(divider))<prevalence){
+						right = divider;
+					}else {
+						left = divider;
+					}
+				}
+				if(colors.get(sorted.get(0))<prevalence) {
+					sorted.add(0,rgb);
+				}else if(right<sorted.size() && colors.get(sorted.get(right))>prevalence) {
+					sorted.add(right+1,rgb);
+				}else {
+					sorted.add(right,rgb);
+				}
+			}
 		}
+		
+		System.out.println("S2");
 		/*for(int i=sorted.size()-1; i>=0; i--) {
 			int rgb = sorted.get(i);
 			Color c = convertColor(rgb);
@@ -59,9 +92,13 @@ public class Main {
 			subcols.put(sorted.get(i),new ArrayList<Integer>());
 		}
 		
+		System.out.println("S2.5");
+		
 		for(int i=1; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
+			System.out.print(System.currentTimeMillis());
 			for(int j=0; j<i; j++) {
+				System.out.print(" "+j);
 				if(colorsClose(rgb,sorted.get(j),cutoff)){
 					int rgb2 = sorted.get(j);
 					clumps.put(rgb2,colors.get(rgb)+clumps.get(rgb2));
@@ -78,7 +115,10 @@ public class Main {
 					j=i;
 				}
 			}
+			System.out.println();
 		}
+		
+		System.out.println("S3");
 		
 		int width = 900;
 		int height = 300;
@@ -88,7 +128,7 @@ public class Main {
 		
 		
 		double unit = (double)totalPixels/width;
-		System.out.println(unit);
+		//System.out.println(unit);
 		int pos = 0;
 		for(int i=0; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
@@ -99,13 +139,13 @@ public class Main {
 				int rgb2 = sub.get(k);
 				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit); j++) {
 					g.setColor(convertColorI2C(rgb2));
-					System.out.println(j+"  "+pos);
+					//System.out.println(j+"  "+pos);
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
 				if((int)(.5+colors.get(rgb2)/unit)==0 && pos<=spos+(int)(.5+clumps.get(rgb)/unit)) {
 					g.setColor(convertColorI2C(rgb2));
-					System.out.println(1+"  "+pos);
+					//System.out.println(1+"  "+pos);
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
@@ -113,11 +153,13 @@ public class Main {
 			
 			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<=width) {
 				g.setColor(convertColorI2C(rgb));
-				System.out.println(1+"  "+pos);
+				//System.out.println(1+"  "+pos);
 				g.drawLine(pos,0,pos,height);
 				pos++;
 			}
 		}
+		
+		System.out.println("S4");
 		/*for(int i=0; i<6; i++) {
 			Color col1 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
 			Color col2 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
