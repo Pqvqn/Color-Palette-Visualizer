@@ -84,7 +84,7 @@ public class Main {
 			System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
 			//Color c = new Color(red,green,blue);
 		}*/
-		double cutoff = 20;
+		double cutoff = 30;
 		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
 		Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
 		for(int i=0; i<sorted.size(); i++) {
@@ -104,8 +104,9 @@ public class Main {
 					int rgb2 = sorted.get(j);
 					clumps.put(rgb2,clumps.get(rgb)+clumps.get(rgb2));
 					clumps.remove(rgb);
-					subcols.get(rgb2).add(rgb);
-					for(int c : subcols.get(rgb))subcols.get(rgb2).add(c);
+					subcols.get(rgb2).add(0,rgb);
+					ArrayList<Integer> cc = subcols.get(rgb);
+					for(int c=cc.size()-1; c>=0; c--)subcols.get(rgb2).add(cc.get(c));
 					//System.out.println(subcols.get(rgb2));
 					subcols.remove(rgb);
 					sorted.remove(i);
@@ -152,34 +153,35 @@ public class Main {
 		double unit = (double)totalPixels/width;
 		//System.out.println(unit);
 		int pos = 0;
-		for(int i=0; i<sorted.size(); i++) {
-			int rgb = sorted.get(i);
-			ArrayList<Integer> sub = subcols.get(rgb);
-			sub.add(0,rgb);
-			int spos = pos-1;
-			for(int k=0; k<sub.size(); k++) {
-				int rgb2 = sub.get(k);
+		for(int s=0; s<sorted.size(); s++) {
+			int rgb = sorted.get(s);
+			int spos = pos;
+			ArrayList<Integer> clumped = subcols.get(rgb);
+			clumped.add(0,rgb);
+			int clumpwid = (int)(.5+clumps.get(rgb)/unit);
+			for(int i=0; i<clumped.size(); i++) {
+				int rgb2 = clumped.get(i);
 				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit); j++) {
 					g.setColor(convertColorI2C(rgb2));
-					//System.out.println(j+"  "+pos);
+					System.out.println(j+"  "+pos);
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
-				if((int)(.5+colors.get(rgb2)/unit)==0 && pos<=spos+(int)(.5+clumps.get(rgb)/unit)) {
+				if((int)(.5+colors.get(rgb2)/unit)==0 && pos<spos+clumpwid) {
 					g.setColor(convertColorI2C(rgb2));
 					//System.out.println(1+"  "+pos);
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
 			}
-			
-			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<=width) {
+			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<width) {
 				g.setColor(convertColorI2C(rgb));
 				//System.out.println(1+"  "+pos);
 				g.drawLine(pos,0,pos,height);
 				pos++;
 			}
 		}
+
 		
 		System.out.println("S4");
 		/*for(int i=0; i<6; i++) {
