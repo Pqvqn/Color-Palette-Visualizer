@@ -84,7 +84,7 @@ public class Main {
 			System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
 			//Color c = new Color(red,green,blue);
 		}*/
-		double cutoff = 30;
+		double cutoff = 20;
 		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
 		Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
 		for(int i=0; i<sorted.size(); i++) {
@@ -94,28 +94,50 @@ public class Main {
 		
 		System.out.println("S2.5");
 		
-		for(int i=1; i<sorted.size(); i++) {
+		for(int i=sorted.size()-1; i>0; i--) {
 			int rgb = sorted.get(i);
-			System.out.print(System.currentTimeMillis());
+			//System.out.print(System.currentTimeMillis());
+			System.out.println(i);
 			for(int j=0; j<i; j++) {
-				System.out.print(" "+j);
+				//System.out.print(" "+j);
 				if(colorsClose(rgb,sorted.get(j),cutoff)){
 					int rgb2 = sorted.get(j);
-					clumps.put(rgb2,colors.get(rgb)+clumps.get(rgb2));
+					clumps.put(rgb2,clumps.get(rgb)+clumps.get(rgb2));
 					clumps.remove(rgb);
 					subcols.get(rgb2).add(rgb);
+					for(int c : subcols.get(rgb))subcols.get(rgb2).add(c);
 					//System.out.println(subcols.get(rgb2));
 					subcols.remove(rgb);
 					sorted.remove(i);
 					sorted.remove(j);
-					int k;
-					for(k=0; k<sorted.size() && clumps.get(sorted.get(k)) > clumps.get(rgb2); k++);
-					sorted.add(k,rgb2);
-					i--;
+					if(sorted.isEmpty()) {
+						sorted.add(rgb2);
+					}else {
+						int left = 0;
+						int right = sorted.size();
+						int prevalence = clumps.get(rgb2);
+						while(right-left>1) {
+							int divider = (right-left)/2+left;
+							if(clumps.get(sorted.get(divider))>prevalence) {
+								left = divider;
+							}else if (clumps.get(sorted.get(divider))<prevalence){
+								right = divider;
+							}else {
+								left = divider;
+							}
+						}
+						if(clumps.get(sorted.get(0))<prevalence) {
+							sorted.add(0,rgb2);
+						}else if(right<sorted.size() && clumps.get(sorted.get(right))>prevalence) {
+							sorted.add(right+1,rgb2);
+						}else {
+							sorted.add(right,rgb2);
+						}
+					}
 					j=i;
 				}
 			}
-			System.out.println();
+			//System.out.println();
 		}
 		
 		System.out.println("S3");
