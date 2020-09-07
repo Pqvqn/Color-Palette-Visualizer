@@ -53,8 +53,10 @@ public class Main {
 		}*/
 		double cutoff = 30;
 		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
+		Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
 		for(int i=0; i<sorted.size(); i++) {
 			clumps.put(sorted.get(i),colors.get(sorted.get(i)));
+			subcols.put(sorted.get(i),new ArrayList<Integer>());
 		}
 		
 		for(int i=1; i<sorted.size(); i++) {
@@ -64,6 +66,9 @@ public class Main {
 					int rgb2 = sorted.get(j);
 					clumps.put(rgb2,colors.get(rgb)+clumps.get(rgb2));
 					clumps.remove(rgb);
+					subcols.get(rgb2).add(rgb);
+					//System.out.println(subcols.get(rgb2));
+					subcols.remove(rgb);
 					sorted.remove(i);
 					sorted.remove(j);
 					int k;
@@ -75,8 +80,8 @@ public class Main {
 			}
 		}
 		
-		int width = 300;
-		int height = 100;
+		int width = 900;
+		int height = 300;
 		
 		BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 		Graphics g = output.createGraphics();
@@ -87,12 +92,25 @@ public class Main {
 		int pos = 0;
 		for(int i=0; i<sorted.size(); i++) {
 			int rgb = sorted.get(i);
-			for(int j=0; j<(int)(.5+clumps.get(rgb)/unit); j++) {
-				g.setColor(convertColorI2C(rgb));
-				System.out.println(j+"  "+pos);
-				g.drawLine(pos,0,pos,height);
-				pos++;
+			ArrayList<Integer> sub = subcols.get(rgb);
+			sub.add(0,rgb);
+			int spos = pos-1;
+			for(int k=0; k<sub.size(); k++) {
+				int rgb2 = sub.get(k);
+				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit); j++) {
+					g.setColor(convertColorI2C(rgb2));
+					System.out.println(j+"  "+pos);
+					g.drawLine(pos,0,pos,height);
+					pos++;
+				}
+				if((int)(.5+colors.get(rgb2)/unit)==0 && pos<=spos+(int)(.5+clumps.get(rgb)/unit)) {
+					g.setColor(convertColorI2C(rgb2));
+					System.out.println(1+"  "+pos);
+					g.drawLine(pos,0,pos,height);
+					pos++;
+				}
 			}
+			
 			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<=width) {
 				g.setColor(convertColorI2C(rgb));
 				System.out.println(1+"  "+pos);
