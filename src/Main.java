@@ -88,8 +88,9 @@ public class Main {
 		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
 		Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
 		for(int i=0; i<sorted.size(); i++) {
-			clumps.put(sorted.get(i),colors.get(sorted.get(i)));
-			subcols.put(sorted.get(i),new ArrayList<Integer>());
+			int rgb = sorted.get(i);
+			clumps.put(rgb,colors.get(rgb));
+			subcols.put(rgb,new ArrayList<Integer>());
 		}
 		
 		System.out.println("S2.5");
@@ -104,9 +105,40 @@ public class Main {
 					int rgb2 = sorted.get(j);
 					clumps.put(rgb2,clumps.get(rgb)+clumps.get(rgb2));
 					clumps.remove(rgb);
-					subcols.get(rgb2).add(0,rgb);
-					ArrayList<Integer> cc = subcols.get(rgb);
-					for(int c=cc.size()-1; c>=0; c--)subcols.get(rgb2).add(cc.get(c));
+					ArrayList<Integer> addfrom = subcols.get(rgb);
+					ArrayList<Integer> addto = subcols.get(rgb2);
+					addfrom.add(0,rgb);
+					//for(int c=cc.size()-1; c>=0; c--)subcols.get(rgb2).add(0,cc.get(c));
+					int lastindex = 0;
+					for(int c=0; c<addfrom.size(); c++) {
+						int rgb3 = addfrom.get(c);
+						if(addto.isEmpty()) {
+							lastindex = 0;
+						}else {
+							int left = lastindex;
+							int right = addto.size();
+							int prevalence = colors.get(rgb3);
+							while(right-left>1) {
+								int divider = (right-left)/2+left;
+								if(colors.get(addto.get(divider))>prevalence) {
+									left = divider;
+								}else if (colors.get(addto.get(divider))<prevalence){
+									right = divider;
+								}else {
+									left = divider;
+								}
+							}
+							if(colors.get(addto.get(lastindex))<prevalence) {
+								//lastindex = 0;
+							}else if(right<addto.size() && colors.get(addto.get(right))>prevalence) {
+								lastindex = right+1;
+							}else {
+								lastindex = right;
+							}
+						}
+						addto.add(lastindex,rgb3);
+					}
+					//subcols.get(rgb2).add(0,rgb);
 					//System.out.println(subcols.get(rgb2));
 					subcols.remove(rgb);
 					sorted.remove(i);
@@ -143,7 +175,7 @@ public class Main {
 		
 		System.out.println("S3");
 		
-		int width = 900;
+		int width = 3200;
 		int height = 300;
 		
 		BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
@@ -159,11 +191,16 @@ public class Main {
 			ArrayList<Integer> clumped = subcols.get(rgb);
 			clumped.add(0,rgb);
 			int clumpwid = (int)(.5+clumps.get(rgb)/unit);
+			
+			/*int total = 0;
+			for(int i=0; i<clumped.size(); i++)total+=colors.get(clumped.get(i));
+			System.out.println(clumps.get(rgb)+"   "+total);*/
+			
 			for(int i=0; i<clumped.size(); i++) {
 				int rgb2 = clumped.get(i);
-				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit); j++) {
+				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit) && pos<spos+clumpwid; j++) {
 					g.setColor(convertColorI2C(rgb2));
-					System.out.println(j+"  "+pos);
+					//System.out.println(j+"  "+pos);
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
@@ -173,6 +210,7 @@ public class Main {
 					g.drawLine(pos,0,pos,height);
 					pos++;
 				}
+				if(s==2)System.out.println(i+"  "+colors.get(rgb2));
 			}
 			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<width) {
 				g.setColor(convertColorI2C(rgb));
@@ -180,9 +218,10 @@ public class Main {
 				g.drawLine(pos,0,pos,height);
 				pos++;
 			}
+			
+			
 		}
 
-		
 		System.out.println("S4");
 		/*for(int i=0; i<6; i++) {
 			Color col1 = convertColor(sorted.get((int)(Math.random()*sorted.size())));
