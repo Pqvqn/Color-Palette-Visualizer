@@ -21,23 +21,33 @@ public class Main {
 		System.out.print("Filepath: "+homepath);
 		String filepath = homepath+sc.nextLine();
 		System.out.println();
+		
+		
+		
+		for(int km=1; km<=604; km++) {
+		
 		BufferedImage img = null;
 		try {
-			img = ImageIO.read(new File(filepath));
+			String name = "image-"+ ((km>=10)?((km>=100)?""+km:"0"+km):"00"+km)  +".png";
+			img = ImageIO.read(new File(filepath+name));
+			int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
+			
+			System.out.println("S0 "+km);
+			
+			for(int i=0; i<pixels.length; i++) {
+				int rgb = pixels[i];
+				if(!colors.containsKey(rgb))colors.put(rgb,0);
+				colors.put(rgb,colors.get(rgb)+1);
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			System.out.println("Image "+km+" does not exist");
 		}
 		
-		int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
 		
-		System.out.println("S0");
-		
-		for(int i=0; i<pixels.length; i++) {
-			int rgb = pixels[i];
-			if(!colors.containsKey(rgb))colors.put(rgb,0);
-			colors.put(rgb,colors.get(rgb)+1);
 		}
+		
 		
 		System.out.println("S1");
 		
