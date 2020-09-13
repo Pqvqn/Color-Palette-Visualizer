@@ -15,19 +15,26 @@ public class Main {
 
 	public static void main(String[] args) {
 		
-		Map<Integer,Integer> colors = new HashMap<Integer,Integer>();
+
 		Scanner sc = new Scanner(System.in);
 		String homepath = System.getProperty("user.home")+ "\\";
 		System.out.print("Filepath: "+homepath);
 		String filepath = homepath+sc.nextLine();
 		System.out.println();
 		
+		int width = 1;
+		int height = 2159;
 		
+		BufferedImage grandoutput = new BufferedImage(width*2159,height,BufferedImage.TYPE_INT_ARGB);
+		Graphics g2 = grandoutput.createGraphics();
 		
-		for(int km=1; km<=604; km++) {
+		int vpos = 0;
+		
+		for(int km=1; km<=2194; km++) {
 		
 		BufferedImage img = null;
 		try {
+			Map<Integer,Integer> colors = new HashMap<Integer,Integer>();
 			String name = "image-"+ ((km>=10)?((km>=100)?""+km:"0"+km):"00"+km)  +".png";
 			img = ImageIO.read(new File(filepath+name));
 			int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
@@ -39,6 +46,192 @@ public class Main {
 				if(!colors.containsKey(rgb))colors.put(rgb,0);
 				colors.put(rgb,colors.get(rgb)+1);
 			}
+			
+			System.out.println("S1");
+			
+			Iterator<Integer> it = colors.keySet().iterator();
+			ArrayList<Integer> sorted = new ArrayList<Integer>();
+			int totalPixels = 0;
+			while(it.hasNext()) {
+				Integer rgb = it.next();
+				//int i;
+				//for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
+				//sorted.add(i,rgb);
+				totalPixels+=colors.get(rgb);
+				
+				if(sorted.isEmpty()) {
+					sorted.add(rgb);
+				}else {
+					int left = 0;
+					int right = sorted.size();
+					int prevalence = colors.get(rgb);
+					while(right-left>1) {
+						int divider = (right-left)/2+left;
+						if(colors.get(sorted.get(divider))>prevalence) {
+							left = divider;
+						}else if (colors.get(sorted.get(divider))<prevalence){
+							right = divider;
+						}else {
+							left = divider;
+						}
+					}
+					if(colors.get(sorted.get(0))<prevalence) {
+						sorted.add(0,rgb);
+					}else if(right<sorted.size() && colors.get(sorted.get(right))>prevalence) {
+						sorted.add(right+1,rgb);
+					}else {
+						sorted.add(right,rgb);
+					}
+				}
+			}
+			
+			System.out.println("S2");
+			/*for(int i=sorted.size()-1; i>=0; i--) {
+				int rgb = sorted.get(i);
+				Color c = convertColor(rgb);
+				System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
+				//Color c = new Color(red,green,blue);
+			}*/
+			double cutoff = 30;
+			Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
+			Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
+			for(int i=0; i<sorted.size(); i++) {
+				int rgb = sorted.get(i);
+				clumps.put(rgb,colors.get(rgb));
+				subcols.put(rgb,new ArrayList<Integer>());
+			}
+			
+			System.out.println("S2.5");
+			
+			for(int i=sorted.size()-1; i>0; i--) {
+				int rgb = sorted.get(i);
+				//System.out.print(System.currentTimeMillis());
+				System.out.println(i);
+				for(int j=0; j<i; j++) {
+					//System.out.print(" "+j);
+					if(colorsClose(rgb,sorted.get(j),cutoff)){
+						int rgb2 = sorted.get(j);
+						clumps.put(rgb2,clumps.get(rgb)+clumps.get(rgb2));
+						clumps.remove(rgb);
+						ArrayList<Integer> addfrom = subcols.get(rgb);
+						ArrayList<Integer> addto = subcols.get(rgb2);
+						addfrom.add(0,rgb);
+						//for(int c=cc.size()-1; c>=0; c--)subcols.get(rgb2).add(0,cc.get(c));
+						int lastindex = 0;
+						for(int c=0; c<addfrom.size(); c++) {
+							int rgb3 = addfrom.get(c);
+							if(addto.isEmpty()) {
+								lastindex = 0;
+							}else {
+								int left = lastindex;
+								int right = addto.size();
+								int prevalence = colors.get(rgb3);
+								while(right-left>1) {
+									int divider = (right-left)/2+left;
+									if(colors.get(addto.get(divider))>prevalence) {
+										left = divider;
+									}else if (colors.get(addto.get(divider))<prevalence){
+										right = divider;
+									}else {
+										left = divider;
+									}
+								}
+								if(colors.get(addto.get(lastindex))<prevalence) {
+									//lastindex = 0;
+								}else if(right<addto.size() && colors.get(addto.get(right))>prevalence) {
+									lastindex = right+1;
+								}else {
+									lastindex = right;
+								}
+							}
+							addto.add(lastindex,rgb3);
+						}
+						//subcols.get(rgb2).add(0,rgb);
+						//System.out.println(subcols.get(rgb2));
+						subcols.remove(rgb);
+						sorted.remove(i);
+						sorted.remove(j);
+						if(sorted.isEmpty()) {
+							sorted.add(rgb2);
+						}else {
+							int left = 0;
+							int right = sorted.size();
+							int prevalence = clumps.get(rgb2);
+							while(right-left>1) {
+								int divider = (right-left)/2+left;
+								if(clumps.get(sorted.get(divider))>prevalence) {
+									left = divider;
+								}else if (clumps.get(sorted.get(divider))<prevalence){
+									right = divider;
+								}else {
+									left = divider;
+								}
+							}
+							if(clumps.get(sorted.get(0))<prevalence) {
+								sorted.add(0,rgb2);
+							}else if(right<sorted.size() && clumps.get(sorted.get(right))>prevalence) {
+								sorted.add(right+1,rgb2);
+							}else {
+								sorted.add(right,rgb2);
+							}
+						}
+						j=i;
+					}
+				}
+				//System.out.println();
+			}
+			
+			System.out.println("S3");
+			
+			//int width = 3200;
+			//int height = 300;
+			
+			BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
+			Graphics g = output.createGraphics();
+			
+			
+			double unit = (double)totalPixels/height;
+			//System.out.println(unit);
+			int pos = 0;
+			for(int s=0; s<sorted.size(); s++) {
+				int rgb = sorted.get(s);
+				int spos = pos;
+				ArrayList<Integer> clumped = subcols.get(rgb);
+				clumped.add(0,rgb);
+				int clumpwid = (int)(.5+clumps.get(rgb)/unit);
+				
+				/*int total = 0;
+				for(int i=0; i<clumped.size(); i++)total+=colors.get(clumped.get(i));
+				System.out.println(clumps.get(rgb)+"   "+total);*/
+				
+				for(int i=0; i<clumped.size(); i++) {
+					int rgb2 = clumped.get(i);
+					for(int j=0; j<(int)(.5+colors.get(rgb2)/unit) && pos<spos+clumpwid; j++) {
+						g.setColor(convertColorI2C(rgb2));
+						//System.out.println(j+"  "+pos);
+						g.drawLine(0,pos,width,pos);
+						pos++;
+					}
+					if((int)(.5+colors.get(rgb2)/unit)==0 && pos<spos+clumpwid) {
+						g.setColor(convertColorI2C(rgb2));
+						//System.out.println(1+"  "+pos);
+						g.drawLine(0,pos,width,pos);
+						pos++;
+					}
+					if(s==2)System.out.println(i+"  "+colors.get(rgb2));
+				}
+				if((int)(.5+clumps.get(rgb)/unit)==0 && pos<width) {
+					g.setColor(convertColorI2C(rgb));
+					//System.out.println(1+"  "+pos);
+					g.drawLine(0,pos,width,pos);
+					pos++;
+				}
+				
+			
+				
+			}
+			g2.drawImage(output,vpos,0,null);
+			vpos+=width;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			//e.printStackTrace();
@@ -49,188 +242,7 @@ public class Main {
 		}
 		
 		
-		System.out.println("S1");
 		
-		Iterator<Integer> it = colors.keySet().iterator();
-		ArrayList<Integer> sorted = new ArrayList<Integer>();
-		int totalPixels = 0;
-		while(it.hasNext()) {
-			Integer rgb = it.next();
-			//int i;
-			//for(i=0; i<sorted.size() && colors.get(sorted.get(i)) > colors.get(rgb); i++);
-			//sorted.add(i,rgb);
-			totalPixels+=colors.get(rgb);
-			
-			if(sorted.isEmpty()) {
-				sorted.add(rgb);
-			}else {
-				int left = 0;
-				int right = sorted.size();
-				int prevalence = colors.get(rgb);
-				while(right-left>1) {
-					int divider = (right-left)/2+left;
-					if(colors.get(sorted.get(divider))>prevalence) {
-						left = divider;
-					}else if (colors.get(sorted.get(divider))<prevalence){
-						right = divider;
-					}else {
-						left = divider;
-					}
-				}
-				if(colors.get(sorted.get(0))<prevalence) {
-					sorted.add(0,rgb);
-				}else if(right<sorted.size() && colors.get(sorted.get(right))>prevalence) {
-					sorted.add(right+1,rgb);
-				}else {
-					sorted.add(right,rgb);
-				}
-			}
-		}
-		
-		System.out.println("S2");
-		/*for(int i=sorted.size()-1; i>=0; i--) {
-			int rgb = sorted.get(i);
-			Color c = convertColor(rgb);
-			System.out.println("("+c.getRed()+","+c.getGreen()+","+c.getBlue()+") : "+colors.get(rgb));
-			//Color c = new Color(red,green,blue);
-		}*/
-		double cutoff = 30;
-		Map<Integer,Integer> clumps = new HashMap<Integer,Integer>();
-		Map<Integer,ArrayList<Integer>> subcols = new HashMap<Integer,ArrayList<Integer>>();
-		for(int i=0; i<sorted.size(); i++) {
-			int rgb = sorted.get(i);
-			clumps.put(rgb,colors.get(rgb));
-			subcols.put(rgb,new ArrayList<Integer>());
-		}
-		
-		System.out.println("S2.5");
-		
-		for(int i=sorted.size()-1; i>0; i--) {
-			int rgb = sorted.get(i);
-			//System.out.print(System.currentTimeMillis());
-			System.out.println(i);
-			for(int j=0; j<i; j++) {
-				//System.out.print(" "+j);
-				if(colorsClose(rgb,sorted.get(j),cutoff)){
-					int rgb2 = sorted.get(j);
-					clumps.put(rgb2,clumps.get(rgb)+clumps.get(rgb2));
-					clumps.remove(rgb);
-					ArrayList<Integer> addfrom = subcols.get(rgb);
-					ArrayList<Integer> addto = subcols.get(rgb2);
-					addfrom.add(0,rgb);
-					//for(int c=cc.size()-1; c>=0; c--)subcols.get(rgb2).add(0,cc.get(c));
-					int lastindex = 0;
-					for(int c=0; c<addfrom.size(); c++) {
-						int rgb3 = addfrom.get(c);
-						if(addto.isEmpty()) {
-							lastindex = 0;
-						}else {
-							int left = lastindex;
-							int right = addto.size();
-							int prevalence = colors.get(rgb3);
-							while(right-left>1) {
-								int divider = (right-left)/2+left;
-								if(colors.get(addto.get(divider))>prevalence) {
-									left = divider;
-								}else if (colors.get(addto.get(divider))<prevalence){
-									right = divider;
-								}else {
-									left = divider;
-								}
-							}
-							if(colors.get(addto.get(lastindex))<prevalence) {
-								//lastindex = 0;
-							}else if(right<addto.size() && colors.get(addto.get(right))>prevalence) {
-								lastindex = right+1;
-							}else {
-								lastindex = right;
-							}
-						}
-						addto.add(lastindex,rgb3);
-					}
-					//subcols.get(rgb2).add(0,rgb);
-					//System.out.println(subcols.get(rgb2));
-					subcols.remove(rgb);
-					sorted.remove(i);
-					sorted.remove(j);
-					if(sorted.isEmpty()) {
-						sorted.add(rgb2);
-					}else {
-						int left = 0;
-						int right = sorted.size();
-						int prevalence = clumps.get(rgb2);
-						while(right-left>1) {
-							int divider = (right-left)/2+left;
-							if(clumps.get(sorted.get(divider))>prevalence) {
-								left = divider;
-							}else if (clumps.get(sorted.get(divider))<prevalence){
-								right = divider;
-							}else {
-								left = divider;
-							}
-						}
-						if(clumps.get(sorted.get(0))<prevalence) {
-							sorted.add(0,rgb2);
-						}else if(right<sorted.size() && clumps.get(sorted.get(right))>prevalence) {
-							sorted.add(right+1,rgb2);
-						}else {
-							sorted.add(right,rgb2);
-						}
-					}
-					j=i;
-				}
-			}
-			//System.out.println();
-		}
-		
-		System.out.println("S3");
-		
-		int width = 3200;
-		int height = 300;
-		
-		BufferedImage output = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
-		Graphics g = output.createGraphics();
-		
-		
-		double unit = (double)totalPixels/width;
-		//System.out.println(unit);
-		int pos = 0;
-		for(int s=0; s<sorted.size(); s++) {
-			int rgb = sorted.get(s);
-			int spos = pos;
-			ArrayList<Integer> clumped = subcols.get(rgb);
-			clumped.add(0,rgb);
-			int clumpwid = (int)(.5+clumps.get(rgb)/unit);
-			
-			/*int total = 0;
-			for(int i=0; i<clumped.size(); i++)total+=colors.get(clumped.get(i));
-			System.out.println(clumps.get(rgb)+"   "+total);*/
-			
-			for(int i=0; i<clumped.size(); i++) {
-				int rgb2 = clumped.get(i);
-				for(int j=0; j<(int)(.5+colors.get(rgb2)/unit) && pos<spos+clumpwid; j++) {
-					g.setColor(convertColorI2C(rgb2));
-					//System.out.println(j+"  "+pos);
-					g.drawLine(pos,0,pos,height);
-					pos++;
-				}
-				if((int)(.5+colors.get(rgb2)/unit)==0 && pos<spos+clumpwid) {
-					g.setColor(convertColorI2C(rgb2));
-					//System.out.println(1+"  "+pos);
-					g.drawLine(pos,0,pos,height);
-					pos++;
-				}
-				if(s==2)System.out.println(i+"  "+colors.get(rgb2));
-			}
-			if((int)(.5+clumps.get(rgb)/unit)==0 && pos<width) {
-				g.setColor(convertColorI2C(rgb));
-				//System.out.println(1+"  "+pos);
-				g.drawLine(pos,0,pos,height);
-				pos++;
-			}
-			
-			
-		}
 
 		System.out.println("S4");
 		/*for(int i=0; i<6; i++) {
@@ -253,7 +265,7 @@ public class Main {
 		if(!ret.exists()) {
 			try {
 				ret.createNewFile();
-				ImageIO.write(output, "png", ret);
+				ImageIO.write(grandoutput, "png", ret);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
