@@ -22,20 +22,21 @@ public class Main {
 		String filepath = homepath+sc.nextLine();
 		System.out.println();
 		
-		int width = 1;
-		int height = 2159;
+		int width = 600;
+		int height = 3000;
 		
-		BufferedImage grandoutput = new BufferedImage(width*2159,height,BufferedImage.TYPE_INT_ARGB);
+		BufferedImage grandoutput = new BufferedImage(width*1,height,BufferedImage.TYPE_INT_ARGB);
 		Graphics g2 = grandoutput.createGraphics();
 		
 		int vpos = 0;
 		
-		for(int km=1; km<=2194; km++) {
+		for(int km=1; km<=1; km++) {
 		
 		BufferedImage img = null;
 		try {
 			Map<Integer,Integer> colors = new HashMap<Integer,Integer>();
 			String name = "image-"+ ((km>=10)?((km>=100)?""+km:"0"+km):"00"+km)  +".png";
+			name = "diuvsmol.png";
 			img = ImageIO.read(new File(filepath+name));
 			int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
 			
@@ -193,12 +194,16 @@ public class Main {
 			double unit = (double)totalPixels/height;
 			//System.out.println(unit);
 			int pos = 0;
+			int sumPixels = 0;
 			for(int s=0; s<sorted.size(); s++) {
 				int rgb = sorted.get(s);
 				int spos = pos;
 				ArrayList<Integer> clumped = subcols.get(rgb);
-				clumped.add(0,rgb);
-				int clumpwid = (int)(.5+clumps.get(rgb)/unit);
+				clumped.add(0,rgb);			
+
+				int clumpwid = (int)(.5+(height - pos)*(((double)clumps.get(rgb))/(totalPixels - sumPixels)));
+				
+				sumPixels+=clumps.get(rgb);
 				
 				/*int total = 0;
 				for(int i=0; i<clumped.size(); i++)total+=colors.get(clumped.get(i));
@@ -206,26 +211,20 @@ public class Main {
 				
 				for(int i=0; i<clumped.size(); i++) {
 					int rgb2 = clumped.get(i);
-					for(int j=0; j<(int)(.5+colors.get(rgb2)/unit) && pos<spos+clumpwid; j++) {
+					for(int j=0; j<(int)(colors.get(rgb2)/unit) && pos<spos+clumpwid; j++) {
 						g.setColor(convertColorI2C(rgb2));
 						//System.out.println(j+"  "+pos);
 						g.drawLine(0,pos,width,pos);
 						pos++;
 					}
-					if((int)(.5+colors.get(rgb2)/unit)==0 && pos<spos+clumpwid) {
+					if((int)(colors.get(rgb2)/unit)==0 && pos<spos+clumpwid) {
 						g.setColor(convertColorI2C(rgb2));
 						//System.out.println(1+"  "+pos);
 						g.drawLine(0,pos,width,pos);
 						pos++;
 					}
-					if(s==2)System.out.println(i+"  "+colors.get(rgb2));
 				}
-				if((int)(.5+clumps.get(rgb)/unit)==0 && pos<width) {
-					g.setColor(convertColorI2C(rgb));
-					//System.out.println(1+"  "+pos);
-					g.drawLine(0,pos,width,pos);
-					pos++;
-				}
+
 				
 			
 				
