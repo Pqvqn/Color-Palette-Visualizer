@@ -24,19 +24,45 @@ public class Main {
 		
 		int width = 600;
 		int height = 3000;
+		int imagecount = 1;
+		int loopfrom = 1;
+		int loopto = 1;
+
+		String imagename = "";
+		System.out.print("Number of Images: ");
+		imagecount = sc.nextInt();
+		if(imagecount == 1) {
+			sc.nextLine();
+			System.out.print("Image Name: ");
+			imagename = sc.nextLine();
+		}else {
+			System.out.print("Filename Start Index: ");
+			loopfrom = sc.nextInt();
+			System.out.print("Filename End Index: ");
+			loopto = sc.nextInt();
+		}
+		System.out.print("Width per Image: ");
+		width = sc.nextInt();
+		System.out.print("Output Height: ");
+		height = sc.nextInt();
+
 		
-		BufferedImage grandoutput = new BufferedImage(width*1,height,BufferedImage.TYPE_INT_ARGB);
+		BufferedImage grandoutput = new BufferedImage(width*imagecount,height,BufferedImage.TYPE_INT_ARGB);
 		Graphics g2 = grandoutput.createGraphics();
 		
 		int vpos = 0;
 		
-		for(int km=1; km<=1; km++) {
+		for(int km=loopfrom; km<=loopto; km++) {
 		
 		BufferedImage img = null;
 		try {
 			Map<Integer,Integer> colors = new HashMap<Integer,Integer>();
-			String name = "image-"+ ((km>=10)?((km>=100)?""+km:"0"+km):"00"+km)  +".png";
-			name = "diuvsmol.png";
+			String name = "";
+			if(imagecount == 1) {
+				name = imagename;
+			}else {
+				name = "image-"+ ((km>=10)?((km>=100)?""+km:"0"+km):"00"+km)  +".png";
+			}
 			img = ImageIO.read(new File(filepath+name));
 			int[] pixels = img.getRGB(0,0,img.getWidth(),img.getHeight(),null,0,img.getWidth());
 			
@@ -255,9 +281,10 @@ public class Main {
 		
 		
 		System.out.print("Filepath: "+homepath);
+		sc.nextLine();
 		String filepath_save = homepath+sc.nextLine();
-		System.out.println();
 		sc.close();
+		System.out.println();
 		
 		File ret = new File(filepath_save);
 		ret.getParentFile().mkdirs();
